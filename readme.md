@@ -104,6 +104,7 @@ You can try `:help key` to know more about `key`. If it is an existing binding, 
 -   `zi`/`zo`/`zz` — zoom in/out/reset zoom
 -   `<C-f>`/`<C-b>` — jump to the next/previous part of the page
 -   `g?` — Apply Caesar cipher to page (run `g?` again to switch back)
+-   `g!` — Jumble words on page
 
 #### Find mode
 
@@ -420,9 +421,9 @@ Other objectives:
 
 The logo was designed by Jake Beazley using free vector art by <a target="_blank" href="https://www.Vecteezy.com">www.Vecteezy.com</a>
 
-[gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
+[gitter-badge]: /static/badges/gitter-badge.svg
 [gitter-link]: https://gitter.im/tridactyl/Lobby
-[matrix-badge]: https://matrix.to/img/matrix-badge.svg
+[matrix-badge]: /static/badges/matrix-badge.svg
 [matrix-link]: https://riot.im/app/#/room/#tridactyl:matrix.org
 [betas]: https://tridactyl.cmcaine.co.uk/betas/?sort=time&order=desc
 [riskyclick]: https://tridactyl.cmcaine.co.uk/betas/tridactyl-latest.xpi

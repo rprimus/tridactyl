@@ -239,6 +239,7 @@ export class default_config {
         x: "stop",
         gi: "focusinput -l",
         "g?": "rot13",
+        "g!": "jumble",
         "g;": "changelistjump -1",
         J: "tabprev",
         K: "tabnext",
@@ -603,6 +604,7 @@ export class default_config {
         prefremove: "removepref",
         tabclosealltoright: "tabcloseallto right",
         tabclosealltoleft: "tabcloseallto left",
+        reibadailty: "jumble",
     }
 
     /**
@@ -805,6 +807,19 @@ export class default_config {
     modeindicator: "true" | "false" = "true"
 
     /**
+     * Whether to display the mode indicator in various modes. Ignored if modeindicator set to false.
+     */
+    modeindicatormodes: { [key: string]: "true" | "false" } = {
+        normal: "true",
+        insert: "true",
+        input: "true",
+        ignore: "true",
+        ex: "true",
+        hint: "true",
+        visual: "true"
+    }
+
+    /**
      * Milliseconds before registering a scroll in the jumplist
      */
     jumpdelay = 3000
@@ -980,6 +995,27 @@ export class default_config {
      * When displaying bookmarks in history completions, how many page views to pretend they have.
      */
     bmarkweight = 100
+
+    /**
+     * General completions options - NB: options are set according to our internal completion source name - see - `src/completions/[name].ts` in the Tridactyl source.
+     */
+    completions = {
+        Tab: {
+            /**
+             * Whether to automatically select the closest matching completion
+             */
+            autoselect: "true",
+        },
+        Rss: {
+            autoselect: "true",
+        },
+        Bmark: {
+            autoselect: "true",
+        },
+        Sessions: {
+            autoselect: "true",
+        },
+    }
 
     /**
      * Number of results that should be shown in completions. -1 for unlimited

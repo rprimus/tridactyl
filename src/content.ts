@@ -155,6 +155,7 @@ import * as urlutils from "@src/lib/url_util"
 import * as scrolling from "@src/content/scrolling"
 import * as R from "ramda"
 import * as visual from "@src/lib/visual"
+import * as metadata from "@src/.metadata.generated"
 /* tslint:disable:import-spacing */
 ;(window as any).tri = Object.assign(Object.create(null), {
     browserBg: webext.browserBg,
@@ -170,6 +171,7 @@ import * as visual from "@src/lib/visual"
     itertools,
     logger,
     Mark,
+    metadata,
     keyseq,
     messaging,
     state,
@@ -345,7 +347,9 @@ config.getAsync("modeindicator").then(mode => {
         statusIndicator.className +=
             " TridactylMode" + statusIndicator.textContent
 
-        if (config.get("modeindicator") !== "true") statusIndicator.remove()
+        if ((config.get("modeindicator") !== "true") || (config.get("modeindicatormodes",mode) !== "true")) {
+            statusIndicator.remove()
+        }
     })
 })
 

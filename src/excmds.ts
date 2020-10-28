@@ -65,7 +65,7 @@
     [gitter-link]: https://gitter.im/tridactyl/Lobby
     [freenode-badge]: /static/badges/freenode-badge.svg
     [freenode-link]: ircs://chat.freenode.net/tridactyl
-    [matrix-badge]: https://matrix.to/img/matrix-badge.svg
+    [matrix-badge]: /static/badges/matrix-badge.svg
     [matrix-link]: https://riot.im/app/#/room/#tridactyl:matrix.org
 */
 /** ignore this line */
@@ -129,7 +129,7 @@ import * as DOM from "@src/lib/dom"
 import * as CommandLineContent from "@src/content/commandline_content"
 import * as scrolling from "@src/content/scrolling"
 import { ownTab } from "@src/lib/webext"
-import { wrap_input, getLineAndColNumber, rot13_helper } from "@src/lib/editor_utils"
+import { wrap_input, getLineAndColNumber, rot13_helper, jumble_helper } from "@src/lib/editor_utils"
 import * as finding from "@src/content/finding"
 import * as toys from "./content/toys"
 import * as hinting from "@src/content/hinting"
@@ -2480,10 +2480,11 @@ export async function tabcloseallto(side: string) {
     current window unless the most recently closed item is a window.
 
     Supplying either "tab" or "window" as an argument will specifically only
-    restore an item of the specified type.
+    restore an item of the specified type. Supplying "tab_strict" only restores
+    tabs that were open in the current window.
 
     @param item
-        The type of item to restore. Valid inputs are "recent", "tab" and "window".
+        The type of item to restore. Valid inputs are "recent", "tab", "tab_strict" and "window".
     @return
         The tab or window id of the restored item. Returns -1 if no items are found.
  */
@@ -2492,52 +2493,27 @@ export async function undo(item = "recent"): Promise<number> {
     const current_win_id: number = (await browser.windows.getCurrent()).id
     const sessions = await browser.sessions.getRecentlyClosed()
 
-    if (item === "tab") {
-        const lastSession = sessions.find(s => {
-            if (s.tab) return true
-        })
-        if (lastSession) {
-            browser.sessions.restore(lastSession.tab.sessionId)
-            return lastSession.tab.id
-        }
-    } else if (item === "window") {
-        const lastSession = sessions.find(s => {
-            if (s.window) return true
-        })
-        if (lastSession) {
-            browser.sessions.restore(lastSession.window.sessionId)
-            return lastSession.window.id
-        }
-    } else if (item === "recent") {
-        // The first session object that's a window or a tab from this window. Or undefined if sessions is empty.
-        const lastSession = sessions.find(s => {
-            if (s.window) {
-                return true
-            } else if (s.tab && s.tab.windowId === current_win_id) {
-                return true
-            } else {
-                return false
-            }
-        })
+    // Pick the first session object that is a window or a tab from this window ("recent"), a tab ("tab"), a tab
+    // from this window ("tab_strict"), a window ("window") or pick by sessionId.
+    const predicate =
+        item === "recent"
+            ? s => s.window || (s.tab && s.tab.windowId === current_win_id)
+            : item === "tab"
+            ? s => s.tab
+            : item === "tab_strict"
+            ? s => s.tab && s.tab.windowId === current_win_id
+            : item === "window"
+            ? s => s.window
+            : !isNaN(parseInt(item, 10))
+            ? s => (s.tab || s.window).sessionId === item
+            : s => {
+                  throw new Error(`[undo] Invalid argument: ${item}. Must be one of "recent, "tab", "tab_strict", "window" or a sessionId (by selecting a session using the undo completion).`)
+              } // this won't throw an error if there isn't anything in the session list, but I don't think that matters
+    const session = sessions.find(predicate)
 
-        if (lastSession) {
-            if (lastSession.tab) {
-                browser.sessions.restore(lastSession.tab.sessionId)
-                return lastSession.tab.id
-            } else if (lastSession.window) {
-                browser.sessions.restore(lastSession.window.sessionId)
-                return lastSession.window.id
-            }
-        }
-    } else if (!isNaN(parseInt(item, 10))) {
-        const sessionId = item
-        const session = sessions.find(s => (s.tab || s.window).sessionId === sessionId)
-        if (session) {
-            browser.sessions.restore(sessionId)
-            return (session.tab || session.window).id
-        }
-    } else {
-        throw new Error(`[undo] Invalid argument: ${item}. Must be one of "tab", "window", "recent"`)
+    if (session) {
+        browser.sessions.restore((session.tab || session.window).sessionId)
+        return (session.tab || session.window).id
     }
     return -1
 }
@@ -4385,6 +4361,23 @@ export function rot13(n: number) {
     while (body.nextNode()) {
         const t = body.currentNode.textContent
         body.currentNode.textContent = rot13_helper(t, n)
+    }
+}
+/**
+ * Perform text jumbling (reibadailty).
+ *
+ * Shuffles letters except for first and last in all words in text nodes in the current tab. Only characters in
+ * the ASCII range are considered.
+ *
+ * Inspired by: https://www.newscientist.com/letter/mg16221887-600-reibadailty/
+ */
+//#content
+export function jumble() {
+    const body = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: node => NodeFilter.FILTER_ACCEPT })
+
+    while (body.nextNode()) {
+        const t = body.currentNode.textContent
+        body.currentNode.textContent = jumble_helper(t)
     }
 }
 /**
